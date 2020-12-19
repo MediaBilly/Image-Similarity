@@ -1,13 +1,13 @@
 #include "../headers/bruteforce_search.h"
 #include <algorithm>
 
-template<typename ImageType>
-Bruteforce_Search<ImageType>::Bruteforce_Search(std::vector<ImageType*> images) {
+template<typename PixelType>
+Bruteforce_Search<PixelType>::Bruteforce_Search(std::vector<Image<PixelType>*> images) {
     this->images = images;
 }
 
-template<typename ImageType>
-std::vector<std::pair<double,int>> Bruteforce_Search<ImageType>::exactNN(ImageType *q, int N) {
+template<typename PixelType>
+std::vector<std::pair<double,int>> Bruteforce_Search<PixelType>::exactNN(Image<PixelType> *q, int N) {
     // Calculate distance of q to all the points in the dataset
     std::vector<std::pair<double,int>> neighbors;
     
@@ -21,7 +21,10 @@ std::vector<std::pair<double,int>> Bruteforce_Search<ImageType>::exactNN(ImageTy
     return neighbors;
 }
 
-template<typename ImageType>
-Bruteforce_Search<ImageType>::~Bruteforce_Search() {
+template<typename PixelType>
+Bruteforce_Search<PixelType>::~Bruteforce_Search() {
 
 }
+
+template class Bruteforce_Search<Pixel8Bit>;
+template class Bruteforce_Search<Pixel16Bit>;

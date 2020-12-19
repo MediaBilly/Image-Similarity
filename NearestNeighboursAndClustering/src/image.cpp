@@ -3,7 +3,8 @@
 #include <cmath>
 #include <iostream>
 
-Image::Image(int id,int width,int height) {
+template<typename PixelType>
+Image<PixelType>::Image(int id,int width,int height) {
     this->id = id;
     this->width = width;
     this->height = height;
@@ -11,7 +12,8 @@ Image::Image(int id,int width,int height) {
 }
 
 // Copy constructor
-Image::Image(Image &img) {
+template<typename PixelType>
+Image<PixelType>::Image(Image &img) {
     this->id = img.id;
     this->width = img.width;
     this->height = img.height;
@@ -24,8 +26,8 @@ Image::Image(Image &img) {
 }
 
 
-
-bool Image::setPixel(int index,Pixel8Bit pixel) {
+template<typename PixelType>
+bool Image<PixelType>::setPixel(int index,PixelType pixel) {
     // Check bounds
     if (index >= this->getSize() || index < 0) {
         return false;
@@ -36,19 +38,23 @@ bool Image::setPixel(int index,Pixel8Bit pixel) {
     return true;
 }
 
-int Image::getId() {
+template<typename PixelType>
+int Image<PixelType>::getId() {
     return this->id;
 }
 
-Pixel8Bit Image::getPixel(int index) {
+template<typename PixelType>
+PixelType Image<PixelType>::getPixel(int index) {
     return (index < this->width*this->height && index >= 0) ? this->pixels[index] : -1;
 }
 
-int Image::getSize() {
+template<typename PixelType>
+int Image<PixelType>::getSize() {
     return this->width * this->height;
 }
 
-double Image::distance(Image *image, int norm) {
+template<typename PixelType>
+double Image<PixelType>::distance(Image *image, int norm) {
     // Check if both images lie on the same space
     if (this->getSize() != image->getSize()) {
         return -1.0;
@@ -61,6 +67,10 @@ double Image::distance(Image *image, int norm) {
     return pow(d, 1/norm);
 }
 
-Image::~Image() {
+template<typename PixelType>
+Image<PixelType>::~Image() {
     delete[] this->pixels;
 }
+
+template class Image<Pixel8Bit>;
+template class Image<Pixel16Bit>;

@@ -3,17 +3,19 @@
 #include <cmath>
 #include <vector>
 
-Cluster::Cluster(Image &centroid,unsigned int id) {
+template<typename PixelType>
+Cluster<PixelType>::Cluster(Image<PixelType> &centroid,unsigned int id) {
     this->centroid = new Image(centroid);
     this->id = id;
 }
 
-unsigned int Cluster::getId() {
+template<typename PixelType>
+unsigned int Cluster<PixelType>::getId() {
     return this->id;
 }
 
-
-bool Cluster::addPoint(Image *point) {
+template<typename PixelType>
+bool Cluster<PixelType>::addPoint(Image<PixelType> *point) {
     // Check if this point is already in this cluster
     if (this->points.find(point->getId()) == this->points.end()) {
         this->points[point->getId()] = point;
@@ -23,7 +25,8 @@ bool Cluster::addPoint(Image *point) {
     return false;
 }
 
-bool Cluster::removePoint(int id) {
+template<typename PixelType>
+bool Cluster<PixelType>::removePoint(int id) {
     // Check if this point is in this cluster
     if (this->points.find(id) != this->points.end()) {
         this->points.erase(id);
@@ -33,28 +36,30 @@ bool Cluster::removePoint(int id) {
     return false;
 }
 
-unsigned int Cluster::getSize() {
+template<typename PixelType>
+unsigned int Cluster<PixelType>::getSize() {
     return this->points.size();
 }
 
-
+template<typename PixelType>
 struct PointsComparator {
     PointsComparator(int d) {
         this->d = d; 
     }
 
-    bool operator () (Image* p1, Image* p2) {
+    bool operator () (Image<PixelType>* p1, Image<PixelType>* p2) {
         return p1->getPixel(d) < p2->getPixel(d);
     }
 
     int d;
 };
 
-void Cluster::updateCentroid() {
+template<typename PixelType>
+void Cluster<PixelType>::updateCentroid() {
     // Update the centroid to be the median of all the cluster's points
     for (int j = 0; j < this->centroid->getSize(); j++) {
         // Sort the points in ascending order by jth dimension
-        std::vector<Image*> points_sorted_by_d;
+        std::vector<Image<PixelType>*> points_sorted_by_d;
         for (auto it : this->points) { 
             points_sorted_by_d.push_back(it.second);
         } 
@@ -64,16 +69,19 @@ void Cluster::updateCentroid() {
     }
 }
 
-void Cluster::clear() {
+template<typename PixelType>
+void Cluster<PixelType>::clear() {
     this->points.clear();
 }
 
-Image* Cluster::getCentroid() {
+template<typename PixelType>
+Image<PixelType>* Cluster<PixelType>::getCentroid() {
     return this->centroid;
 }
 
-std::vector<Image*> Cluster::getPoints() {
-    std::vector<Image*> ret;
+template<typename PixelType>
+std::vector<Image<PixelType>*> Cluster<PixelType>::getPoints() {
+    std::vector<Image<PixelType>*> ret;
 
     for (auto it : this->points) {
         ret.push_back(it.second);
@@ -82,7 +90,8 @@ std::vector<Image*> Cluster::getPoints() {
     return ret;
 }
 
-double Cluster::avgDistance(Image *point) {
+template<typename PixelType>
+double Cluster<PixelType>::avgDistance(Image<PixelType> *point) {
     double dist = 0.0;
 
     for (auto it : this->points) {
@@ -92,7 +101,11 @@ double Cluster::avgDistance(Image *point) {
     return dist / this->points.size();
 }
 
-
-Cluster::~Cluster() {
+template<typename PixelType>
+Cluster<PixelType>::~Cluster() {
     delete this->centroid;
 }
+
+
+template class Cluster<Pixel8Bit>;
+template class Cluster<Pixel16Bit>;

@@ -1,7 +1,9 @@
 #pragma once
 
-typedef char Pixel8Bit;
+typedef unsigned char Pixel8Bit;
+typedef unsigned short Pixel16Bit;
 
+template<typename PixelType>
 class Image
 {
     private:
@@ -12,9 +14,9 @@ class Image
     public:
         Image(int id, int width, int height);
         Image(Image &img);
-        bool setPixel(int index, Pixel8Bit pixel);
+        bool setPixel(int index, PixelType pixel);
         int getId();
-        Pixel8Bit getPixel(int index);
+        PixelType getPixel(int index);
         int getSize();
         // Calculates the p-norm distance to another image
         double distance(Image *image, int norm);

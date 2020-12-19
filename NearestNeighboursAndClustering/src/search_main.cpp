@@ -55,20 +55,20 @@ int main(int argc, char const *argv[])
 	}
 
     // Read Dataset
-    Dataset<Image,Pixel8Bit> *datasetOriginalSpace = new Dataset<Image,Pixel8Bit>(inputFileOriginalSpace);
-    Dataset<ImageReduced,Pixel16Bit> *datasetNewSpace = new Dataset<ImageReduced,Pixel16Bit>(inputFileNewSpace);
+    Dataset<Pixel8Bit> *datasetOriginalSpace = new Dataset<Pixel8Bit>(inputFileOriginalSpace);
+    Dataset<Pixel16Bit> *datasetNewSpace = new Dataset<Pixel16Bit>(inputFileNewSpace);
 
     if (datasetOriginalSpace->isValid() && datasetNewSpace->isValid()) {
         // Get images from datasets
-        std::vector<Image*> imagesOriginalSpace = datasetOriginalSpace->getImages();
-        std::vector<ImageReduced*> imagesNewSpace = datasetNewSpace->getImages();
+        std::vector<Image<Pixel8Bit>*> imagesOriginalSpace = datasetOriginalSpace->getImages();
+        std::vector<Image<Pixel16Bit>*> imagesNewSpace = datasetNewSpace->getImages();
 
         // Initialize LSH interface
         int w = datasetOriginalSpace->avg_NN_distance() * 6;
         LSH *lsh = new LSH(k, w, L, datasetOriginalSpace);
 
-        Bruteforce_Search<Image> *bruteforceOriginalSpace = new Bruteforce_Search<Image>(imagesOriginalSpace);
-        Bruteforce_Search<ImageReduced> *bruteforceNewSpace = new Bruteforce_Search<ImageReduced>(imagesNewSpace);
+        Bruteforce_Search<Pixel8Bit> *bruteforceOriginalSpace = new Bruteforce_Search<Pixel8Bit>(imagesOriginalSpace);
+        Bruteforce_Search<Pixel16Bit> *bruteforceNewSpace = new Bruteforce_Search<Pixel16Bit>(imagesNewSpace);
 
         // Open output file
         std::ofstream outputStream(outputFile);
@@ -76,8 +76,8 @@ int main(int argc, char const *argv[])
         bool repeat;
         do {
             // Read querysets
-            Dataset<Image,Pixel8Bit> *querysetOriginalSpace = new Dataset<Image,Pixel8Bit>(queryFileOriginalSpace);
-            Dataset<ImageReduced,Pixel16Bit> *querysetNewSpace = new Dataset<ImageReduced,Pixel16Bit>(queryFileNewSpace);
+            Dataset<Pixel8Bit> *querysetOriginalSpace = new Dataset<Pixel8Bit>(queryFileOriginalSpace);
+            Dataset<Pixel16Bit> *querysetNewSpace = new Dataset<Pixel16Bit>(queryFileNewSpace);
 
             if (!querysetOriginalSpace->isValid()) {
                 delete querysetOriginalSpace;
@@ -85,9 +85,10 @@ int main(int argc, char const *argv[])
             }
 
             // Get query images
-            std::vector<Image*> queryImagesOriginalSpace = querysetOriginalSpace->getImages();
-            std::vector<ImageReduced*> queryImagesNewSpace = querysetNewSpace->getImages();
-            double total_bf_time=0.0,total_lsh_time=0.0,total_reduced_time=0.0;
+            std::vector<Image<Pixel8Bit>*> queryImagesOriginalSpace = querysetOriginalSpace->getImages();
+            std::vector<Image<Pixel16Bit>*> queryImagesNewSpace = querysetNewSpace->getImages();
+            double total_bf_time=0.0,total_lsh_time=0.0,total_reduced_time=0.0,approximation_factor_lsh=0.0,approximation_factor_reduced=0.0;
+            unsigned int lsh_found_neighbours = queryImagesOriginalSpace.size();
             for (unsigned int i = 0; i < queryImagesOriginalSpace.size(); i++) {
                 outputStream << "Query: " << queryImagesOriginalSpace[i]->getId() << std::endl;
 
@@ -107,16 +108,34 @@ int main(int argc, char const *argv[])
                 total_bf_time += bf_time;
                 
                 outputStream << "Nearest neighbor Reduced: " << reducedNearestNeighbours[0].second << std::endl;
-                outputStream << "Nearest neighbor LSH: " << lshNearestNeighbours[0].second << std::endl;
+                outputStream << "Nearest neighbor LSH: ";
+                if (lshNearestNeighbours.size() > 0) {
+                    outputStream << lshNearestNeighbours[0].second;
+                    approximation_factor_lsh += lshNearestNeighbours[0].first/exactNearestNeighbours[0].first;
+                }
+                else {
+                    outputStream << "NOT FOUND";
+                    lsh_found_neighbours--;
+                }
+                approximation_factor_reduced += reducedNearestNeighbours[0].first/exactNearestNeighbours[0].first;
+                
+                outputStream << std::endl;
                 outputStream << "Nearest neighbor True: " << exactNearestNeighbours[0].second << std::endl;
                 outputStream << "distanceReduced: " << reducedNearestNeighbours[0].first << std::endl;
-                outputStream << "distanceLSH: " << lshNearestNeighbours[0].first << std::endl;
-                outputStream << "distanceTrue: " << exactNearestNeighbours[0].first << std::endl;
+                outputStream << "distanceLSH: " << (lshNearestNeighbours.size() > 0 ? lshNearestNeighbours[0].first : exactNearestNeighbours[0].first); 
+                outputStream << std::endl;
+                outputStream << "distanceTrue: " << exactNearestNeighbours[0].first << std::endl << std::endl;
             }
 
             outputStream << "tReduced: " << total_reduced_time << std::endl;
             outputStream << "tLSH: " << total_lsh_time << std::endl;
             outputStream << "tTrue: " << total_bf_time << std::endl;
+
+            approximation_factor_lsh /= lsh_found_neighbours;
+            approximation_factor_reduced /= queryImagesOriginalSpace.size();
+
+            outputStream << "Approximation Factor LSH: " << approximation_factor_lsh << std::endl;
+            outputStream << "Approximation Factor Reduced: " << approximation_factor_reduced << std::endl;
             
             outputStream << std::endl;
             

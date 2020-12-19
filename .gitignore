@@ -1,0 +1,7 @@
+.vscode
+datasets
+*/__pycache__
+__pycache__
+*.dat
+*.h5
+*.o

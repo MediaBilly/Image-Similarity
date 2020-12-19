@@ -12,10 +12,10 @@
 #include "../headers/lsh.h"
 
 void usage() {
-    std::cout << "Usage:./cluster  –i  <input  file>  –c  <configuration  file>  -o  <output  file>  -complete  <optional> -m <method: Classic OR LSH or Hypercube>\n";
+    std::cout << "Usage:./cluster -d <input file original space> -i <input file new space> -n <classes from NN as clusters file> -c <configuration file> -o <output file>\n";
 }
 
-double minDistBetweenClusterCentroids(std::vector<Cluster*> &clusters) {
+double minDistBetweenClusterCentroids(std::vector<Cluster<PixelType>*> &clusters) {
     // Calculate min distance between centers to use it as start radius for range search in reverse assignment
     double ret = 1.0/0.0;
     for(unsigned int i = 0; i < clusters.size(); i++) {
@@ -105,7 +105,8 @@ int main(int argc, char const *argv[]) {
     bool repeat;
     do {
         // Read Dataset
-        Dataset<Image,Pixel8Bit> *dataset = new Dataset<Image,Pixel8Bit>(inputFile);
+        Dataset<Pixel8Bit> *datasetOriginalSpace = new Dataset<Pixel8Bit>(inputFile);
+        Dataset<Pixel16Bit> *datasetNewSpace = new Dataset<Pixel16Bit>(inputFile);
 
         if (dataset->isValid()) {
             // Get images from dataset
@@ -190,14 +191,14 @@ int main(int argc, char const *argv[]) {
                 delete[] P;
             }
             // Initialize clusters for all centroids
-            std::vector<Cluster*> clusters;
+            std::vector<Cluster<PixelType>*> clusters;
             unsigned int cid = 0;
             for (auto c : centroids) {
-                clusters.push_back(new Cluster(*images[c-1],cid++));
+                clusters.push_back(new Cluster<PixelType>(*images[c-1],cid++));
             }
 
             unsigned int assignments;
-            std::unordered_map<int, Cluster*> clusterHistory;
+            std::unordered_map<int, Cluster<PixelType>*> clusterHistory;
 
             int w = 0;
             LSH *lsh = NULL;
@@ -231,7 +232,7 @@ int main(int argc, char const *argv[]) {
                     for (unsigned int i = 0; i < images.size(); i++) {
                         // Find closest cluster for the current(ith) image
                         double minDist = 1.0/0.0;
-                        Cluster *minCluster = NULL;
+                        Cluster<PixelType> *minCluster = NULL;
                         for (unsigned j = 0; j < clusters.size(); j++) {
                             double dist = images[i]->distance(clusters[j]->getCentroid(),1);
                             if (dist < minDist) {
@@ -249,7 +250,7 @@ int main(int argc, char const *argv[]) {
                 } else if (method == "LSH") {
                     // LSH Reverse Assignment
                     std::unordered_map<int,Image*> tmpPointsMap = pointsMap;
-                    std::unordered_map<int,Cluster*> bestCluster;
+                    std::unordered_map<int,Cluster<PixelType>*> bestCluster;
                     double R = ceil(minDistBetweenClusterCentroids(clusters)/2.0);
                     unsigned int curPoints = 0,prevPoints;
                     do {
@@ -283,7 +284,7 @@ int main(int argc, char const *argv[]) {
                     // Assign rest points using Lloyd's method
                     for(auto it : tmpPointsMap) {
                         double distToClosestCentroid = 1.0/0.0;
-                        Cluster *closestCluster = NULL;
+                        Cluster<PixelType> *closestCluster = NULL;
 
                         for (unsigned int i = 0; i < clusters.size(); i++) {
                             double dist = it.second->distance(clusters[i]->getCentroid(),1);
@@ -304,7 +305,7 @@ int main(int argc, char const *argv[]) {
                 } else if (method == "Hypercube") {
                     // Hypercube Reverse Assignment
                     std::unordered_map<int,Image*> tmpPointsMap = pointsMap;
-                    std::unordered_map<int,Cluster*> bestCluster;
+                    std::unordered_map<int,Cluster<PixelType>*> bestCluster;
                     double R = ceil(minDistBetweenClusterCentroids(clusters)/2.0);
                     unsigned int curPoints = 0,prevPoints;
                     do {
@@ -339,7 +340,7 @@ int main(int argc, char const *argv[]) {
                     // Assign rest points using Lloyd's method
                     for(auto it : tmpPointsMap) {
                         double distToClosestCentroid = 1.0/0.0;
-                        Cluster *closestCluster = NULL;
+                        Cluster<PixelType> *closestCluster = NULL;
                         
                         for (unsigned int i = 0; i < clusters.size(); i++) {
                             double dist = it.second->distance(clusters[i]->getCentroid(),1);
@@ -394,7 +395,7 @@ int main(int argc, char const *argv[]) {
             std::vector<double> s;
             for (unsigned int i = 0; i < images.size(); i++) {
                 // Calculate distance of ith image to all the clusters
-                Cluster *neighbourCluster = NULL, *closestCluster = NULL;
+                Cluster<PixelType> *neighbourCluster = NULL, *closestCluster = NULL;
                 double distToClosestCentroid = 1.0/0.0, distToSecondClosest = 1.0/0.0;
                 
                 for (unsigned int j = 0; j < clusters.size(); j++) {

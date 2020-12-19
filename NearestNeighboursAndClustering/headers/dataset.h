@@ -3,9 +3,8 @@
 #include <string>
 #include <vector>
 #include "image.h"
-#include "imageReduced.h"
 
-template<typename ImageType, typename PixelType>
+template<typename PixelType>
 class Dataset
 {
     private:
@@ -19,7 +18,7 @@ class Dataset
         bool valid;
         header head;
         int bytes_per_pixel;
-        std::vector<ImageType*> images;
+        std::vector<Image<PixelType>*> images;
 
     public:
         Dataset(std::string inputPath, int bytes_per_pixel=1);
@@ -27,7 +26,7 @@ class Dataset
         int getImageDimension();
         // Used to approximate good value of w
         int avg_NN_distance();
-        std::vector<ImageType*> getImages();
+        std::vector<Image<PixelType>*> getImages();
         ~Dataset();
 };
 

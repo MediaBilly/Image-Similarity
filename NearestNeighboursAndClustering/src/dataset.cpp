@@ -10,8 +10,8 @@
 #define SWAP_INT32(x) ((((unsigned int)(x)) >> 24) | ((((unsigned int)(x)) & 0x00FF0000) >> 8) | ((((unsigned int)(x)) & 0x0000FF00) << 8) | (((unsigned int)(x)) << 24))
 #define W_SAMPLE_SIZE 50
 
-template<typename ImageType, typename PixelType>
-Dataset<ImageType,PixelType>::Dataset(std::string inputPath, int bytes_per_pixel)
+template<typename PixelType>
+Dataset<PixelType>::Dataset(std::string inputPath, int bytes_per_pixel)
 {   
     // Open dataset binary file
     std::ifstream input(inputPath, std::ios::out | std::ios::binary);
@@ -33,10 +33,13 @@ Dataset<ImageType,PixelType>::Dataset(std::string inputPath, int bytes_per_pixel
     // TODO:Read images
     for (unsigned int i = 0; i < this->head.num_of_images; i++) {
         // Read pixels for every image
-        this->images.push_back(new Image(i, this->head.num_of_columns, this->head.num_of_rows));
+        this->images.push_back(new Image<PixelType>(i, this->head.num_of_columns, this->head.num_of_rows));
         for (int p = 0; p < this->getImageDimension(); p++) {
             PixelType pix;
             input.read((char*)&pix, sizeof(PixelType));
+            if (sizeof(PixelType) == sizeof(Pixel16Bit)) {
+                pix = SWAP_INT16(pix);
+            }
             this->images.at(i)->setPixel(p,pix);
         }
     }
@@ -46,37 +49,41 @@ Dataset<ImageType,PixelType>::Dataset(std::string inputPath, int bytes_per_pixel
     this->valid = true;
 }
 
-template<typename ImageType, typename PixelType>
-bool Dataset<ImageType,PixelType>::isValid() {
+template<typename PixelType>
+bool Dataset<PixelType>::isValid() {
     return this->valid;
 }
 
-template<typename ImageType, typename PixelType>
-int Dataset<ImageType,PixelType>::getImageDimension() {
+template<typename PixelType>
+int Dataset<PixelType>::getImageDimension() {
     return this->head.num_of_rows * this->head.num_of_columns;
 }
 
-template<typename ImageType, typename PixelType>
-int Dataset<ImageType,PixelType>::avg_NN_distance() {
+template<typename PixelType>
+int Dataset<PixelType>::avg_NN_distance() {
     int step = images.size() / W_SAMPLE_SIZE;
     double dist_sum = 0.0;
-    Bruteforce_Search bf(images);
+    Bruteforce_Search<PixelType> *bf = new Bruteforce_Search<PixelType>(images);
 
     for(unsigned int i = 0; i < images.size(); i += step) {
-        dist_sum += bf.exactNN(images[i], 2)[1].first;
+        dist_sum += bf->exactNN(images[i], 2)[1].first;
     }
 
+    delete bf;
     return dist_sum / W_SAMPLE_SIZE;
 }
 
-template<typename ImageType, typename PixelType>
-std::vector<ImageType*> Dataset<ImageType,PixelType>::getImages(){
+template<typename PixelType>
+std::vector<Image<PixelType>*> Dataset<PixelType>::getImages(){
     return this->images;
 }
 
-template<typename ImageType, typename PixelType>
-Dataset<ImageType,PixelType>::~Dataset() {
-    for (std::vector<ImageType*>::iterator it = this->images.begin();it < this->images.end();it++) {
+template<typename PixelType>
+Dataset<PixelType>::~Dataset() {
+    for (typename std::vector<Image<PixelType>*>::iterator it = this->images.begin();it < this->images.end();it++) {
         delete *it;
     }
 }
+
+template class Dataset<Pixel8Bit>;
+template class Dataset<Pixel16Bit>;

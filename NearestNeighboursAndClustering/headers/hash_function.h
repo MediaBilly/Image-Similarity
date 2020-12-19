@@ -12,6 +12,6 @@ class Hash_Function
     public:
         Hash_Function(unsigned long k, unsigned long w, unsigned long d);
         // Calculate's hi
-        unsigned long hash(Image *image, unsigned long k);
+        unsigned long hash(Image<Pixel8Bit> *image, unsigned long k);
         ~Hash_Function();
 };

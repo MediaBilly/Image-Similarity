@@ -27,7 +27,7 @@ Hash_Function::Hash_Function(unsigned long k, unsigned long w, unsigned long d) 
     }
 }
 
-unsigned long Hash_Function::hash(Image *image, unsigned long k) {
+unsigned long Hash_Function::hash(Image<Pixel8Bit> *image, unsigned long k) {
     if (k < 0 || k >= this->k) {
         return 0;
     }

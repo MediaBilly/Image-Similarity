@@ -4,23 +4,24 @@
 #include <unordered_map>
 #include "image.h"
 
+template<typename PixelType>
 class Cluster
 {
     private:
         unsigned int id;
-        Image *centroid;
-        std::unordered_map<int,Image*> points;
+        Image<PixelType> *centroid;
+        std::unordered_map<int,Image<PixelType>*> points;
     public:
-        Cluster(Image &centroid,unsigned int id);
+        Cluster(Image<PixelType> &centroid,unsigned int id);
         unsigned int getId();
-        bool addPoint(Image* point);
+        bool addPoint(Image<PixelType>* point);
         bool removePoint(int id);
         unsigned int getSize();
         void updateCentroid();
         void clear();
-        Image* getCentroid();
-        std::vector<Image*> getPoints();
-        double avgDistance(Image *point);
+        Image<PixelType>* getCentroid();
+        std::vector<Image<PixelType>*> getPoints();
+        double avgDistance(Image<PixelType> *point);
         ~Cluster();
 };
 
