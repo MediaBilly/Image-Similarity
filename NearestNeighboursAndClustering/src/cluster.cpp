@@ -5,7 +5,7 @@
 
 template<typename PixelType>
 Cluster<PixelType>::Cluster(Image<PixelType> &centroid,unsigned int id) {
-    this->centroid = new Image(centroid);
+    this->centroid = new Image<PixelType>(centroid);
     this->id = id;
 }
 
@@ -63,7 +63,7 @@ void Cluster<PixelType>::updateCentroid() {
         for (auto it : this->points) { 
             points_sorted_by_d.push_back(it.second);
         } 
-        std::sort(points_sorted_by_d.begin(), points_sorted_by_d.end(), PointsComparator(j));
+        std::sort(points_sorted_by_d.begin(), points_sorted_by_d.end(), PointsComparator<PixelType>(j));
         // Set the jth pixel to the jth pixel of the median point of the sorted ones
         this->centroid->setPixel(j, points_sorted_by_d[(int) ceil(this->points.size() / 2)]->getPixel(j));
     }

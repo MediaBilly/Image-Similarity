@@ -117,7 +117,7 @@ int main(int argc, char const *argv[])
                     outputStream << "NOT FOUND";
                     lsh_found_neighbours--;
                 }
-                approximation_factor_reduced += reducedNearestNeighbours[0].first/exactNearestNeighbours[0].first;
+                approximation_factor_reduced += reducedNearestNeighbours[0].first * 100/exactNearestNeighbours[0].first;
                 
                 outputStream << std::endl;
                 outputStream << "Nearest neighbor True: " << exactNearestNeighbours[0].second << std::endl;
