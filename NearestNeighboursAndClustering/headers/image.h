@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 typedef unsigned char Pixel8Bit;
 typedef unsigned short Pixel16Bit;
 
@@ -20,5 +22,11 @@ class Image
         int getSize();
         // Calculates the p-norm distance to another image
         double distance(Image *image, int norm);
+        // Sum of all the image's pixel values
+        unsigned int totalValue();
+        // Normalizes all the pixel values in order the image's totalValue to equal normed_sum
+        void normalize(unsigned int normed_sum);
+
+        std::vector<Image<PixelType>*> clusters(int clusterDimension);
         ~Image();
 };
