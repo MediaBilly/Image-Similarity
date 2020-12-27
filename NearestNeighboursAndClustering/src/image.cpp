@@ -93,21 +93,54 @@ void Image<PixelType>::normalize(unsigned int normed_sum) {
 template<typename PixelType>
 std::vector<Image<PixelType>*> Image<PixelType>::clusters(int clusterDimension) {
     std::vector<Image<PixelType>*> ret;
+    
     if(this->height % clusterDimension || this->width % clusterDimension)
         return ret;
 
     // Create the clusters
-    for (int i = 0;i < this->getSize()/clusterDimension;i++) {
-        ret.push_back(new Image<PixelType>(i,clusterDimension,clusterDimension));
+    for (int i = 0; i < this->getSize() / (clusterDimension * clusterDimension); i++) {
+        ret.push_back(new Image<PixelType>(i, clusterDimension, clusterDimension));
     }
 
     // Set every pixel to it's corresponding cluster
     for(int i = 0; i < this->getSize(); i++) {
-        int currCluster = (i / clusterDimension) % clusterDimension + i / (this->width * clusterDimension);
-        ret[currCluster]->setPixel(i % clusterDimension + i / this->width,this->pixels[i]);
+        int x_axis = i % this->width;
+        int y_axis = (i / this->width) % this->height;
+
+        int x_cluster_axis = (x_axis / clusterDimension) % (this->width / clusterDimension);
+        int y_cluster_axis = (y_axis / clusterDimension) % (this->height / clusterDimension);
+
+        int currCluster = y_cluster_axis * (this->width / clusterDimension) + x_cluster_axis;
+
+        int x_inner_axis = x_axis % clusterDimension;
+        int y_inner_axis = y_axis % clusterDimension;
+        int currPixel = y_inner_axis * clusterDimension + x_inner_axis;
+        
+        ret[currCluster]->setPixel(currPixel, this->pixels[i]);
     }
 
     // Return the clusters
+    return ret;
+}
+
+
+template<typename PixelType>
+std::tuple<int,int> Image<PixelType>::findCentroid() {
+    int maxValue = 0;
+    int weighted_sum = 0;
+    
+    for(int i = 0; i < this->getSize(); i++) {
+        weighted_sum += this->pixels[i];
+
+        if(this->pixels[i] > maxValue)
+            maxValue = this->pixels[i];
+    }
+    
+    int centroid_index = maxValue ? weighted_sum / this->getSize() : this->getSize() / 2;
+    int x_axis = centroid_index % this->width;
+    int y_axis = (centroid_index / this->width) % this->height;
+
+    std::tuple<int,int> ret(x_axis, y_axis);
     return ret;
 }
 

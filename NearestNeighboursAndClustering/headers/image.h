@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <tuple>
 
 typedef unsigned char Pixel8Bit;
 typedef unsigned short Pixel16Bit;
@@ -26,6 +27,8 @@ class Image
         unsigned int totalValue();
         // Normalizes all the pixel values in order the image's totalValue to equal normed_sum
         void normalize(unsigned int normed_sum);
+
+        std::tuple<int,int> findCentroid();
 
         std::vector<Image<PixelType>*> clusters(int clusterDimension);
         ~Image();
