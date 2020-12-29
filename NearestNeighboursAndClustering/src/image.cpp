@@ -44,6 +44,16 @@ int Image<PixelType>::getId() {
 }
 
 template<typename PixelType>
+int Image<PixelType>::getHeight() {
+    return this->height;
+}
+
+template<typename PixelType>
+int Image<PixelType>::getWidth() {
+    return this->width;
+}
+
+template<typename PixelType>
 PixelType Image<PixelType>::getPixel(int index) {
     return (index < this->width*this->height && index >= 0) ? this->pixels[index] : -1;
 }

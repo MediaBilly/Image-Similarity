@@ -21,6 +21,8 @@ class Image
         int getId();
         PixelType getPixel(int index);
         int getSize();
+        int getWidth();
+        int getHeight();
         // Calculates the p-norm distance to another image
         double distance(Image *image, int norm);
         // Sum of all the image's pixel values
