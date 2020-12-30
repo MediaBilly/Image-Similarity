@@ -119,7 +119,6 @@ std::vector<Image<PixelType>*> Image<PixelType>::clusters(int clusterDimension) 
 
         int x_cluster_axis = (x_axis / clusterDimension) % (this->width / clusterDimension);
         int y_cluster_axis = (y_axis / clusterDimension) % (this->height / clusterDimension);
-
         int currCluster = y_cluster_axis * (this->width / clusterDimension) + x_cluster_axis;
 
         int x_inner_axis = x_axis % clusterDimension;

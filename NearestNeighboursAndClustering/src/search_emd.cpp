@@ -1,15 +1,21 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <tuple>
+#include <string>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
 #include "../headers/dataset.h"
 #include "../headers/image.h"
 #include "../headers/utilities.h"
-#include "ortools/linear_solver/linear_solver.h"
 
 double eucledian_distance(int x1,int y1,int x2,int y2) {
     return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
+/*
 double calculate_emd(Image<Pixel8Bit>* image_1, Image<Pixel8Bit>* image_2,int clusterDimension) {
     using namespace operations_research;
     // Generate the clusters for the 2 images
@@ -87,9 +93,17 @@ double calculate_emd(Image<Pixel8Bit>* image_1, Image<Pixel8Bit>* image_2,int cl
 
     return result;
 }
-
+*/
 
 int main(int argc, char const *argv[]) {
+    // Create named pipes to communicate with the emd calculator program
+    std::string write_pipe = "write_fifo", read_pipe = "read_fifo";
+    
+    if(mkfifo(write_pipe.c_str(), 0666) < 0 || mkfifo(read_pipe.c_str(), 0666) < 0) {
+        perror("mkfifo");
+        return 1;
+    }
+
     // Load training dataset
     std::string trainDatasetPath = "../datasets/training/images.dat";
     Dataset<Pixel8Bit> *trainDataset = new Dataset<Pixel8Bit>(trainDatasetPath);
@@ -99,16 +113,76 @@ int main(int argc, char const *argv[]) {
     std::string queryDatasetPath = "../datasets/training/images.dat";
     Dataset<Pixel8Bit> *queryDataset = new Dataset<Pixel8Bit>(queryDatasetPath);
     std::vector<Image<Pixel8Bit>*> queryImages = queryDataset->getImages();
-    
+
     int cluster_dimension = 4;
-    for (std::vector<Image<Pixel8Bit>*>::iterator qit = queryImages.begin();qit != queryImages.end(); qit++) {
+    int clusteredSize = trainDataset->getImageDimension() / (cluster_dimension * cluster_dimension);
+    double d[clusteredSize][clusteredSize];
+    double wi[clusteredSize];
+    double wj[clusteredSize];
+    double queryTotalValue,imgTotalValue;
+    double emd;
+
+    int pid = fork();
+    if(pid == 0) {
+        execl("./or_tools/bin/emd","emd", write_pipe.c_str(), read_pipe.c_str(), std::to_string(clusteredSize).c_str(), NULL);
+        perror("execl");
+        exit(1);
+    }
+    else if(pid == -1) {
+        std::cerr << "- Error: Fork failed" << std::endl;
+        return 1;
+    }
+
+    int writeFd = open(write_pipe.c_str(), O_WRONLY);
+    int readFd = open(read_pipe.c_str(), O_RDONLY);
+
+    
+    for (std::vector<Image<Pixel8Bit>*>::iterator qit = queryImages.begin();qit != queryImages.begin()+1; qit++) {
         std::cout << "Query: " << (*qit)->getId() << std::endl;
-        for (std::vector<Image<Pixel8Bit>*>::iterator tit = trainImages.begin();tit != trainImages.end(); tit++) {
-            std::cout << "EMD to Image " << (*tit)->getId() << ": " << calculate_emd(*qit,*tit,cluster_dimension) << std::endl;
+
+        // Generate query image clusters
+        std::vector<Image<Pixel8Bit>*> queryClusters = (*qit)->clusters(cluster_dimension);
+
+        queryTotalValue = (*qit)->totalValue();
+        
+        for (std::vector<Image<Pixel8Bit>*>::iterator tit = trainImages.begin(); tit != trainImages.end(); tit++) {
+            std::vector<Image<Pixel8Bit>*> imageClusters = (*tit)->clusters(cluster_dimension);
+
+            // Calculate normalized cluster weights
+            imgTotalValue = (*tit)->totalValue();
+            for (unsigned int i = 0; i < imageClusters.size(); i++) {
+                wi[i] = imageClusters[i]->totalValue() / imgTotalValue;
+
+                std::tuple<int,int> imageCentroid = imageClusters[i]->findCentroid();
+                int x1 = (imageClusters[i]->getId() % ((*tit)->getWidth() / imageClusters[i]->getWidth())) * imageClusters[i]->getWidth() + std::get<0>(imageCentroid);
+                int y1 = (imageClusters[i]->getId() / ((*tit)->getWidth() / imageClusters[i]->getWidth())) * imageClusters[i]->getHeight() + std::get<1>(imageCentroid);
+                
+                for (unsigned int j = 0; j < queryClusters.size(); j++) {
+                    wj[j] = queryClusters[j]->totalValue() / queryTotalValue;
+
+                    std::tuple<int,int> queryCentroid = queryClusters[j]->findCentroid();
+                    int x2 = (queryClusters[j]->getId() % ((*qit)->getWidth() / queryClusters[j]->getWidth())) * queryClusters[j]->getWidth() + std::get<0>(queryCentroid);
+                    int y2 = (queryClusters[j]->getId() / ((*qit)->getWidth() / queryClusters[j]->getWidth())) * queryClusters[j]->getHeight() + std::get<1>(queryCentroid);
+
+                    d[i][j] = eucledian_distance(x1, y1, x2, y2);
+                }
+            }
+
+            // Send the arrays
+            if(write(writeFd, d, sizeof(d)) <= 0 || write(writeFd, wi, sizeof(wi)) <= 0 || write(writeFd, wj, sizeof(wj)) <= 0) {
+                perror("write");
+                break;
+            }
+            // Receive the result
+            if(read(readFd, &emd, sizeof(emd)) <= 0) {
+                perror("read");
+                break;
+            }
+
+            std::cout << "EMD to Image " << (*tit)->getId() << ": " << emd << std::endl;
         }
         std::cout << std::endl;
     }
-    
 
     // double clusterWeight[trainDataset->getImageDimension()/(cluster_dimension * cluster_dimension)];
 
@@ -130,8 +204,19 @@ int main(int argc, char const *argv[]) {
     //         delete *itc;
     //     }
     // }
+
+    int status = 0;
+
+    close(readFd);
+    close(writeFd);
+
+    while (wait(&status) > 0);
+
+    unlink(write_pipe.c_str());
+    unlink(read_pipe.c_str());
     
     delete queryDataset;
     delete trainDataset;
+    
     return 0;
 }
