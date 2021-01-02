@@ -1,17 +1,16 @@
 #include "../headers/dataset.h"
 #include "../headers/bruteforce_search.h"
+#include "../headers/utilities.h"
 #include <iostream>
 #include <fstream>
 #include <cstdio>
 #include <cstring>
 #include <cerrno>
 
-#define SWAP_INT16(x) ((((unsigned short)(x)) >> 8) | (((unsigned short)(x)) << 8))
-#define SWAP_INT32(x) ((((unsigned int)(x)) >> 24) | ((((unsigned int)(x)) & 0x00FF0000) >> 8) | ((((unsigned int)(x)) & 0x0000FF00) << 8) | (((unsigned int)(x)) << 24))
 #define W_SAMPLE_SIZE 50
 
 template<typename PixelType>
-Dataset<PixelType>::Dataset(std::string inputPath, int bytes_per_pixel)
+Dataset<PixelType>::Dataset(std::string inputPath)
 {   
     // Open dataset binary file
     std::ifstream input(inputPath, std::ios::out | std::ios::binary);
@@ -28,7 +27,6 @@ Dataset<PixelType>::Dataset(std::string inputPath, int bytes_per_pixel)
     this->head.num_of_images = SWAP_INT32(this->head.num_of_images);
     this->head.num_of_rows = SWAP_INT32(this->head.num_of_rows);
     this->head.num_of_columns = SWAP_INT32(this->head.num_of_columns);
-    this->bytes_per_pixel = bytes_per_pixel;
 
     // TODO:Read images
     for (unsigned int i = 0; i < this->head.num_of_images; i++) {

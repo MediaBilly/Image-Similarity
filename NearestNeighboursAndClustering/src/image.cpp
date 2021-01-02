@@ -8,6 +8,7 @@ Image<PixelType>::Image(int id,int width,int height) {
     this->id = id;
     this->width = width;
     this->height = height;
+    this->centroid = -1;
     this->pixels = new Pixel8Bit[width*height];
 }
 
@@ -17,6 +18,7 @@ Image<PixelType>::Image(Image &img) {
     this->id = img.id;
     this->width = img.width;
     this->height = img.height;
+    this->centroid = img.centroid;
     // Copy pixels
     this->pixels = new Pixel8Bit[width*height];
     for (int i = 0; i < width*height; i++) {
@@ -92,16 +94,7 @@ Image<PixelType>::~Image() {
 }
 
 template<typename PixelType>
-void Image<PixelType>::normalize(unsigned int normed_sum) {
-    unsigned int sum = this->totalValue();
-
-    for(int i = 0; i < this->getSize(); i++) {        
-        this->pixels[i] *= normed_sum / sum;
-    }
-}
-
-template<typename PixelType>
-std::vector<Image<PixelType>*> Image<PixelType>::clusters(int clusterDimension) {
+std::vector<Image<PixelType>*> Image<PixelType>::findClusters(int clusterDimension) {
     std::vector<Image<PixelType>*> ret;
     
     if(this->height % clusterDimension || this->width % clusterDimension)
@@ -135,21 +128,24 @@ std::vector<Image<PixelType>*> Image<PixelType>::clusters(int clusterDimension) 
 
 template<typename PixelType>
 std::tuple<int,int> Image<PixelType>::findCentroid() {
-    int maxValue = 0;
-    int weighted_sum = 0;
-    
-    for(int i = 0; i < this->getSize(); i++) {
-        weighted_sum += this->pixels[i];
+    if (this->centroid == -1) {
+        int maxValue = 0;
+        int weighted_sum = 0;
+        
+        for(int i = 0; i < this->getSize(); i++) {
+            weighted_sum += this->pixels[i];
 
-        if(this->pixels[i] > maxValue)
-            maxValue = this->pixels[i];
+            if(this->pixels[i] > maxValue)
+                maxValue = this->pixels[i];
+        }
+        
+        this->centroid = maxValue ? weighted_sum / this->getSize() : this->getSize() / 2;
     }
-    
-    int centroid_index = maxValue ? weighted_sum / this->getSize() : this->getSize() / 2;
-    int x_axis = centroid_index % this->width;
-    int y_axis = (centroid_index / this->width) % this->height;
 
-    std::tuple<int,int> ret(x_axis, y_axis);
+    int x = this->centroid % this->width;
+    int y = (this->centroid / this->width) % this->height;
+    
+    std::tuple<int,int> ret(x, y);
     return ret;
 }
 

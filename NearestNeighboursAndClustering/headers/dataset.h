@@ -17,11 +17,10 @@ class Dataset
         };
         bool valid;
         header head;
-        int bytes_per_pixel;
         std::vector<Image<PixelType>*> images;
 
     public:
-        Dataset(std::string inputPath, int bytes_per_pixel=1);
+        Dataset(std::string inputPath);
         bool isValid();
         int getImageDimension();
         // Used to approximate good value of w

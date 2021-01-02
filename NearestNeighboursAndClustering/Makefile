@@ -15,8 +15,8 @@ cluster:cluster_main.o dataset.o image.o bruteforce_search.o utilities.o cluster
 emd:
 	cd ./or_tools; make build SOURCE=../src/emd.cc
 
-search_emd:search_emd.o dataset.o image.o utilities.o bruteforce_search.o
-	$(CC) $(FLAGS) -o search_emd search_emd.o dataset.o image.o utilities.o bruteforce_search.o
+search_emd:search_emd.o dataset.o labelDataset.o image.o utilities.o bruteforce_search.o
+	$(CC) $(FLAGS) -o search_emd search_emd.o dataset.o labelDataset.o image.o utilities.o bruteforce_search.o
 
 %.o:$(SRC_DIR)/%.cpp
 	$(CC) $(FLAGS) -c -o $@ $<

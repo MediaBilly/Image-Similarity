@@ -8,17 +8,18 @@
 #include "../headers/lsh.h"
 
 void usage() {
-    std::cout << "Usage:./search –d <input file original space> –i <input file new space> -q <query file original space> -s <query file new space>  –k <int>  -L <int> -ο  <output file>\n";
+    std::cout << "Usage:./search –d <input file original space> –i <input file new space> -q <query file original space> -s <query file new space>  –k <int>  -L <int> -ο <output file> [-EMD]\n";
 }
 
 int main(int argc, char const *argv[])
 {
-	std::string inputFileOriginalSpace, inputFileNewSpace, queryFileOriginalSpace, queryFileNewSpace, outputFile;
+	std::string inputFileOriginalSpace, inputFileNewSpace, queryFileOriginalSpace, queryFileNewSpace, outputFile, inputDatasetLabels, queryDatasetLabels;
     // Set default parameter values
 	int k = 4, L = 5, N = 1;
+    bool use_emd = false;
 
     // Check usage
-    if (argc == 15) {
+    if (argc == 15 || argc == 20) {
         for(int i = 1; i < argc; i+=2) {
             std::string arg(argv[i]);
 
@@ -43,6 +44,16 @@ int main(int argc, char const *argv[])
 			else if(!arg.compare("-o")) {
 				outputFile = argv[i+1];
 			}
+            else if(!arg.compare("-l1")) {
+				inputDatasetLabels = argv[i+1];
+			}
+            else if(!arg.compare("-l2")) {
+				queryDatasetLabels = argv[i+1];
+			}
+            else if(!arg.compare("-EMD")) {
+				i--;
+                use_emd = true;
+			}
 			else {
 				usage();
 				return 0;
@@ -53,6 +64,11 @@ int main(int argc, char const *argv[])
 		usage();
 		return 0;
 	}
+
+    if(argc == 20 && use_emd == false) {
+        usage();
+		return 0;
+    }
 
     // Read Dataset
     Dataset<Pixel8Bit> *datasetOriginalSpace = new Dataset<Pixel8Bit>(inputFileOriginalSpace);

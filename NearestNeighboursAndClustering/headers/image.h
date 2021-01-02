@@ -13,7 +13,9 @@ class Image
         int id;
         int width;
         int height;
+        int centroid;
         Pixel8Bit *pixels;
+
     public:
         Image(int id, int width, int height);
         Image(Image &img);
@@ -27,11 +29,9 @@ class Image
         double distance(Image *image, int norm);
         // Sum of all the image's pixel values
         unsigned int totalValue();
-        // Normalizes all the pixel values in order the image's totalValue to equal normed_sum
-        void normalize(unsigned int normed_sum);
 
         std::tuple<int,int> findCentroid();
 
-        std::vector<Image<PixelType>*> clusters(int clusterDimension);
+        std::vector<Image<PixelType>*> findClusters(int clusterDimension);
         ~Image();
 };
