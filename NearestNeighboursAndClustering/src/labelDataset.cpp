@@ -40,13 +40,13 @@ bool LabelDataset::isValid() {
     return this->valid;
 }
 
-uint8_t LabelDataset::getLabel(int labelIndex) {
-    if (labelIndex < 0 || labelIndex >= this->labels.size()) {
+uint8_t LabelDataset::getLabel(unsigned int labelIndex) {
+    if (labelIndex >= this->labels.size()) {
         return -1;
     }
     return this->labels[labelIndex];
 }
 
 LabelDataset::~LabelDataset() {
-    
+
 }

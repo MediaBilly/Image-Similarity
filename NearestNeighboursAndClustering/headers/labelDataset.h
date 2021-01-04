@@ -13,6 +13,6 @@ class LabelDataset
     public:
         LabelDataset(std::string inputPath);
         bool isValid();
-        uint8_t getLabel(int imgIndex);
+        uint8_t getLabel(unsigned int imgIndex);
         ~LabelDataset();
 };

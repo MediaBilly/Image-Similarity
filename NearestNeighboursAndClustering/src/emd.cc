@@ -41,6 +41,9 @@ int main(int argc, char const *argv[])
         // Create a linear solver
         MPSolver* linearSolver = MPSolver::CreateSolver("GLOP");
 
+        //absl::Status st = linearSolver->SetNumThreads(8);
+        std::cout << linearSolver->GetSolverSpecificParametersAsString() << std::endl;
+
         double infinity = linearSolver->infinity();
 
         // Define the flow variables (fij)
