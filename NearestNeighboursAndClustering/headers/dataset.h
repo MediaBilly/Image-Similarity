@@ -23,6 +23,8 @@ class Dataset
         Dataset(std::string inputPath);
         bool isValid();
         int getImageDimension();
+        int getImageWidth();
+        int getImageHeight();
         // Used to approximate good value of w
         int avg_NN_distance();
         std::vector<Image<PixelType>*> getImages();

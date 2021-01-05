@@ -58,6 +58,16 @@ int Dataset<PixelType>::getImageDimension() {
 }
 
 template<typename PixelType>
+int Dataset<PixelType>::getImageWidth() {
+    return this->head.num_of_columns;
+}
+
+template<typename PixelType>
+int Dataset<PixelType>::getImageHeight() {
+    return this->head.num_of_rows;
+}
+
+template<typename PixelType>
 int Dataset<PixelType>::avg_NN_distance() {
     int step = images.size() / W_SAMPLE_SIZE;
     double dist_sum = 0.0;

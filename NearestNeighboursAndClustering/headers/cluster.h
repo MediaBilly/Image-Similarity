@@ -13,6 +13,7 @@ class Cluster
         std::unordered_map<int,Image<PixelType>*> points;
     public:
         Cluster(Image<PixelType> &centroid,unsigned int id);
+        Cluster(unsigned int id,int imagesWidth,int imagesHeight);
         unsigned int getId();
         bool addPoint(Image<PixelType>* point);
         bool removePoint(int id);

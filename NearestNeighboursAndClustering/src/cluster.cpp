@@ -10,6 +10,12 @@ Cluster<PixelType>::Cluster(Image<PixelType> &centroid,unsigned int id) {
 }
 
 template<typename PixelType>
+Cluster<PixelType>::Cluster(unsigned int id,int imagesWidth,int imagesHeight) {
+    this->centroid = new Image<PixelType>(id,imagesWidth,imagesHeight);
+    this->id = id;
+}
+
+template<typename PixelType>
 unsigned int Cluster<PixelType>::getId() {
     return this->id;
 }

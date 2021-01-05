@@ -7,8 +7,10 @@
 #include <algorithm>
 #include <utility>
 #include <ctime>
+#include <sstream>
 #include "../headers/dataset.h"
 #include "../headers/cluster.h"
+#include "../headers/utilities.h"
 
 void usage() {
     std::cout << "Usage:./cluster -d <input file original space> -i <input file new space> -n <classes from NN as clusters file> -c <configuration file> -o <output file>\n";
@@ -293,6 +295,7 @@ int main(int argc, char const *argv[]) {
     }
 
     config_ifs.close();
+
     std::ofstream outputStream(outputFile);
 
     bool repeat;
@@ -311,6 +314,57 @@ int main(int argc, char const *argv[]) {
             // Cluster original space images
             outputStream << "ORIGINAL SPACE" << std::endl;
             cluster<Pixel8Bit>(datasetOriginalSpace, K, outputStream);
+
+            outputStream << std::endl;
+
+            // Classes as clusters
+            std::vector<Image<Pixel8Bit>*> images = datasetOriginalSpace->getImages();
+            std::vector<Cluster<Pixel8Bit>*> clusters;
+            std::unordered_map<int, Cluster<Pixel8Bit>*> clusterHistory;
+
+            // Read NN clusters file
+            std::ifstream clusters_ifs(nnClustersFile);
+            std::string line;
+            int cluster_index = 0;
+
+            // Read each line corresponding to a cluster
+            while (std::getline(clusters_ifs, line)) {
+                std::istringstream iss(line);
+                std::string skip, s;
+
+                // Skip unecessary characters
+                iss >> skip >> skip >> skip >> s;
+
+                // Read cluster size
+                //int clusterSize = get_num_from_string(s);
+
+                // Initialize cluster
+                clusters.push_back(new Cluster<Pixel8Bit>(cluster_index,datasetOriginalSpace->getImageWidth(),datasetOriginalSpace->getImageHeight()));
+
+                // Add the images to it
+                while(iss >> s) {
+                    int imgIndex = get_num_from_string(s);
+                    clusters[cluster_index]->addPoint(images[imgIndex]);
+                    clusterHistory[imgIndex] = clusters[cluster_index];
+                }
+
+                // Update it's centroid to match it's images
+                clusters[cluster_index]->updateCentroid();
+
+                cluster_index++;
+            }
+
+            clusters_ifs.close();
+
+            // Evaluation
+            outputStream << "CLASSES AS CLUSTERS" << std::endl;
+            silhouette<Pixel8Bit>(images,clusters,clusterHistory,outputStream);
+            outputStream << "Value of Objective Function: " << objectiveFunction(images, clusters) << std::endl;
+
+            // Delete memory allocated for nn clusters
+            for (unsigned int i = 0;i < clusters.size();i++) {
+                delete clusters[i];
+            }
         }
         
         delete datasetNewSpace;
@@ -331,6 +385,9 @@ int main(int argc, char const *argv[]) {
 
             std::cout << "Input File new space: ";
             std::cin >> inputFileNewSpace;
+            
+            std::cout << "Classes from NN as clusters file: ";
+            std::cin >> nnClustersFile;
         }
 
     } while(repeat);
