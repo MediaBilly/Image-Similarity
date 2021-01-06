@@ -42,7 +42,7 @@ int main(int argc, char const *argv[])
         MPSolver* linearSolver = MPSolver::CreateSolver("GLOP");
 
         //absl::Status st = linearSolver->SetNumThreads(8);
-        std::cout << linearSolver->GetSolverSpecificParametersAsString() << std::endl;
+        //std::cout << linearSolver->GetSolverSpecificParametersAsString() << std::endl;
 
         double infinity = linearSolver->infinity();
 

@@ -3,12 +3,14 @@
 #include <fstream>
 #include <string>
 #include <ctime>
+#include <unistd.h>
 #include "../headers/dataset.h"
 #include "../headers/bruteforce_search.h"
 #include "../headers/lsh.h"
 
 void usage() {
-    std::cout << "Usage:./search –d <input file original space> –i <input file new space> -q <query file original space> -s <query file new space>  –k <int>  -L <int> -ο <output file> [-EMD]\n";
+    std::cout << "Usage:./search –d <input file original space> -i <input file new space> –q <query file original space> -s <query file new space> –k <int> -L <int> -ο <output file> " << std::endl
+                    << "./search –d <input file original space> –q <query file original space> -l1 <labels of input dataset> -l2 <labels of query dataset> -ο <output file> -EMD" << std::endl;
 }
 
 int main(int argc, char const *argv[])
@@ -44,6 +46,25 @@ int main(int argc, char const *argv[])
 			else if(!arg.compare("-o")) {
 				outputFile = argv[i+1];
 			}
+			else {
+				usage();
+				return 0;
+			}
+        }
+    }
+    else if(argc == 12) {
+        for(int i = 1; i < argc; i+=2) {
+            std::string arg(argv[i]);
+
+            if(!arg.compare("-d")) {
+                inputFileOriginalSpace = argv[i+1];
+            }
+            else if(!arg.compare("-q")) {
+				queryFileOriginalSpace = argv[i+1];
+			}
+			else if(!arg.compare("-o")) {
+				outputFile = argv[i+1];
+			}
             else if(!arg.compare("-l1")) {
 				inputDatasetLabels = argv[i+1];
 			}
@@ -65,9 +86,10 @@ int main(int argc, char const *argv[])
 		return 0;
 	}
 
-    if(argc == 20 && use_emd == false) {
-        usage();
-		return 0;
+    if(use_emd) {
+        execl("./search_emd","search_emd", "-d", inputFileOriginalSpace.c_str(), "-q", queryFileOriginalSpace.c_str(), "-l1", inputDatasetLabels.c_str(), "-l2", queryDatasetLabels.c_str(), "-o", outputFile.c_str(), NULL);
+		perror("execl");
+        exit(1);
     }
 
     // Read Dataset
