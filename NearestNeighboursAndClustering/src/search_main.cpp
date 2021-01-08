@@ -147,6 +147,14 @@ int main(int argc, char const *argv[])
                 
                 outputStream << "Nearest neighbor Reduced: " << reducedNearestNeighbours[0].second << std::endl;
                 outputStream << "Nearest neighbor LSH: ";
+
+                double reducedDistanceOriginalSpace;
+                if (reducedNearestNeighbours[0].second != exactNearestNeighbours[0].second) {
+                    reducedDistanceOriginalSpace = queryImagesOriginalSpace[i]->distance(imagesOriginalSpace[reducedNearestNeighbours[0].second],1);
+                } else {
+                    reducedDistanceOriginalSpace = exactNearestNeighbours[0].first;
+                }
+
                 if (lshNearestNeighbours.size() > 0) {
                     outputStream << lshNearestNeighbours[0].second;
                     approximation_factor_lsh += lshNearestNeighbours[0].first/exactNearestNeighbours[0].first;
@@ -155,11 +163,11 @@ int main(int argc, char const *argv[])
                     outputStream << "NOT FOUND";
                     lsh_found_neighbours--;
                 }
-                approximation_factor_reduced += reducedNearestNeighbours[0].first * 100/exactNearestNeighbours[0].first;
+                approximation_factor_reduced += reducedDistanceOriginalSpace/exactNearestNeighbours[0].first;
                 
                 outputStream << std::endl;
                 outputStream << "Nearest neighbor True: " << exactNearestNeighbours[0].second << std::endl;
-                outputStream << "distanceReduced: " << reducedNearestNeighbours[0].first << std::endl;
+                outputStream << "distanceReduced: " << reducedDistanceOriginalSpace << std::endl;
                 outputStream << "distanceLSH: " << (lshNearestNeighbours.size() > 0 ? lshNearestNeighbours[0].first : exactNearestNeighbours[0].first); 
                 outputStream << std::endl;
                 outputStream << "distanceTrue: " << exactNearestNeighbours[0].first << std::endl << std::endl;

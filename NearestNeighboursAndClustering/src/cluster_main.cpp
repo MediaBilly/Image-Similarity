@@ -215,7 +215,7 @@ void cluster(Dataset<PixelType> *dataset, int K, std::ofstream &outputStream) {
             }
         }
 
-    } while (assignments > 100);
+    } while (assignments > 10);
 
     double clustering_time = double(clock() - begin_clustering_time) / CLOCKS_PER_SEC;
 

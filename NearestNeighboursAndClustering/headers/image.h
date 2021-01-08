@@ -14,7 +14,7 @@ class Image
         int width;
         int height;
         int centroid;
-        Pixel8Bit *pixels;
+        PixelType *pixels;
 
     public:
         Image(int id, int width, int height);

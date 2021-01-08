@@ -9,7 +9,7 @@ Image<PixelType>::Image(int id,int width,int height) {
     this->width = width;
     this->height = height;
     this->centroid = -1;
-    this->pixels = new Pixel8Bit[width*height];
+    this->pixels = new PixelType[width*height];
 }
 
 // Copy constructor
@@ -20,7 +20,7 @@ Image<PixelType>::Image(Image &img) {
     this->height = img.height;
     this->centroid = img.centroid;
     // Copy pixels
-    this->pixels = new Pixel8Bit[width*height];
+    this->pixels = new PixelType[width*height];
     for (int i = 0; i < width*height; i++) {
         this->pixels[i] = img.pixels[i];
     }

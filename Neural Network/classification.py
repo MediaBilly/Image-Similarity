@@ -18,9 +18,27 @@ from matplotlib import pyplot as plt
 from math import ceil, sqrt
 
 
+def save_clustering_result(self, dataset, classifier):
+    train_images = dataset.getImagesNormalized()
+    y_pred = classifier.predict(train_images, batch_size=batch_size)
+    predicted_classes = np.argmax(np.round(y_pred), axis=1)
+    
+    clusters = [list() for i in range(10)]
+
+    for index, prediction in enumerate(predicted_classes):
+        clusters[prediction].append(index)
+
+    clustering_output = open("clustering_train_set.txt","a")
+    for i in range(len(clusters)):
+        clustering_output.write("CLUSTER-{} {{ size: {}".format(i,len(clusters[i])))
+        for img_index in clusters[i]:
+            clustering_output.write(", {}".format(img_index))
+        clustering_output.write("}}\n")
+    
+    clustering_output.close()
+
 # Initialize GPU
 init_gpu()
-
 
 # Parse command line arguments
 args_parser = argparse.ArgumentParser()
@@ -152,25 +170,10 @@ while repeat:
             experiment.generate_plot()
 
     plt.show()
-
-    # Save clustering results(K=10 classes)
-    test_images = testset.getImagesNormalized()
-    y_pred = classifier.predict(test_images, batch_size=batch_size)
-    predicted_classes = np.argmax(np.round(y_pred), axis=1)
     
-    clusters = [list() for i in range(10)]
-
-    for index,prediction in enumerate(predicted_classes):
-        clusters[prediction].append(index)
-
-    clustering_output = open("clustering.txt","a")
-    for i in range(len(clusters)):
-        clustering_output.write("CLUSTER-{} {{ size: {}".format(i,len(clusters[i])))
-        for img_index in clusters[i]:
-            clustering_output.write(", {}".format(img_index))
-        clustering_output.write("}}\n")
-    
-    clustering_output.close()
+    # Save clustering results (K=10 classes)
+    save_clustering_result(testset, classifier)
+    save_clustering_result(training_set, classifier)
 
     # Prompt to predict test set
     if get_user_answer_boolean("Classify test set (Y/N)? "):

@@ -108,7 +108,7 @@ else:
         
         epochs = int(input("Epochs: "))
         batch_size = int(input("Batch size: "))
-        embedding_dimension = 10
+        embedding_dimension = int(input("Embedding Dimension: "))
 
         # Clear previous layer session to prevent saving same depth layers with different names
         K.clear_session()
