@@ -110,7 +110,7 @@ while repeat:
     output_layer = layers.Dense(training_labels.num_classes(), activation='softmax')(dropout)
 
     classifier = Model(input_img, output_layer)
-    classifier.compile(loss='categorical_crossentropy', optimizer=optimizers.Adam())
+    classifier.compile(loss='categorical_crossentropy', optimizer=optimizers.Adam(),metrics=['accuracy'])
 
     # Print it's summary
     classifier.summary()

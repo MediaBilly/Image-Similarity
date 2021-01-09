@@ -123,7 +123,7 @@ else:
         decoded = decoder(reshape, convolutional_layers, convolutional_filter_size, convolutional_filters_per_layer, 0)
         
         autoencoder = Model(input_img, decoded)
-        autoencoder.compile(loss='mean_squared_error', optimizer=optimizers.RMSprop())
+        autoencoder.compile(loss='mean_squared_error', optimizer=optimizers.RMSprop(),metrics=['accuracy'])
 
         # Print it's summary
         autoencoder.summary()
@@ -137,6 +137,15 @@ else:
             verbose=1,
             validation_data=(X_validation, y_validation)
         )
+
+        # Calculate trainset accuracy
+        trainset_accuracy = autoencoder.evaluate(images_normed,images_normed)
+        print("Dataset Accuracy: ",trainset_accuracy[1])
+
+        # Calculate queryset accuracy
+        queryset_images = queryset.getImagesNormalized()
+        queryset_accuracy = autoencoder.evaluate(queryset_images,queryset_images)
+        print("Queryset Accuracy: ",queryset_accuracy[1])
         
         # Save experiment results for later use
         parameters = {

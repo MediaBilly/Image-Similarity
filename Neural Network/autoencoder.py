@@ -67,7 +67,7 @@ if os.path.isfile(dataset_file):
         decoded = decoder(encoded, convolutional_layers, convolutional_filter_size, convolutional_filters_per_layer, 0)
         
         autoencoder = Model(input_img, decoded)
-        autoencoder.compile(loss='mean_squared_error', optimizer=optimizers.RMSprop())
+        autoencoder.compile(loss='mean_squared_error', optimizer=optimizers.RMSprop(),metrics=['accuracy'])
 
         # Print it's summary
         autoencoder.summary()
