@@ -1,6 +1,5 @@
 # Code executable for part B
 import argparse
-import enum
 import os
 import numpy as np
 from imageDataset import ImageDataset
@@ -18,7 +17,7 @@ from matplotlib import pyplot as plt
 from math import ceil, sqrt
 
 
-def save_clustering_result(self, dataset, classifier):
+def save_clustering_result(dataset, classifier, filename):
     train_images = dataset.getImagesNormalized()
     y_pred = classifier.predict(train_images, batch_size=batch_size)
     predicted_classes = np.argmax(np.round(y_pred), axis=1)
@@ -28,7 +27,10 @@ def save_clustering_result(self, dataset, classifier):
     for index, prediction in enumerate(predicted_classes):
         clusters[prediction].append(index)
 
-    clustering_output = open("clustering_train_set.txt","a")
+    if os.path.exists(filename):
+        os.remove(filename)
+
+    clustering_output = open(filename,"a")
     for i in range(len(clusters)):
         clustering_output.write("CLUSTER-{} {{ size: {}".format(i,len(clusters[i])))
         for img_index in clusters[i]:
@@ -97,17 +99,20 @@ while repeat:
     epochs_phase_1 = int(input("Phase 1 epochs: "))
     epochs_phase_2 = int(input("Phase 2 epochs: "))
     batch_size = int(input("Batch size: "))
+    embedding_dimension = int(input("Embedding Dimension: "))
     dropout_rate = float(input("Dropout rate: "))
 
     # Clear previous layer session to match continiously constructed layer names in weights file
     K.clear_session()
 
     # Construct the classifier NN(input -> encoder -> Flatten -> FC -> output with 10 classes(0 - 9))
+    fc_size = (int(training_set.getImageDimensions()[0] / 2 ** min(convolutional_layers,2))) * int((training_set.getImageDimensions()[1] / 2 ** min(convolutional_layers,2))) * convolutional_filters_per_layer[-1]
     encoded = encoder(input_img, convolutional_layers, convolutional_filter_size, convolutional_filters_per_layer, dropout_rate)
     flatten = layers.Flatten()(encoded)
-    fc = layers.Dense(fully_connected_size, activation='relu')(flatten)
-    dropout = layers.Dropout(rate=dropout_rate)(fc)
-    output_layer = layers.Dense(training_labels.num_classes(), activation='softmax')(dropout)
+    embedding = layers.Dense(embedding_dimension,name='embedding')(flatten)
+    fc = layers.Dense(fully_connected_size,name="fully_connected")(embedding)
+    dropout = layers.Dropout(rate=dropout_rate,name="final_dropout")(fc)
+    output_layer = layers.Dense(training_labels.num_classes(), activation='softmax',name="output")(dropout)
 
     classifier = Model(input_img, output_layer)
     classifier.compile(loss='categorical_crossentropy', optimizer=optimizers.Adam(),metrics=['accuracy'])
@@ -172,8 +177,8 @@ while repeat:
     plt.show()
     
     # Save clustering results (K=10 classes)
-    save_clustering_result(testset, classifier)
-    save_clustering_result(training_set, classifier)
+    save_clustering_result(testset, classifier,"clustering_test_set.txt")
+    save_clustering_result(training_set, classifier,"clustering_train_set.txt")
 
     # Prompt to predict test set
     if get_user_answer_boolean("Classify test set (Y/N)? "):
@@ -186,7 +191,7 @@ while repeat:
 
         # Evaluate test set
         test_evaluation = classifier.evaluate(test_images,to_categorical(true_labels,num_classes=test_labels.num_classes()),verbose=0)
-        print('Test loss: ', test_evaluation)
+        print('Test loss: ', test_evaluation[0])
         print('Test accuracy: ', accuracy_score(true_labels, predicted_classes))
         
         # Print corrent and incorrect labels

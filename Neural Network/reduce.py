@@ -114,12 +114,12 @@ else:
         K.clear_session()
 
         # Build the autoencoder
-        fc_size = (int(dataset.getImageDimensions()[0] / 4)) * int((dataset.getImageDimensions()[1] / 4)) * convolutional_filters_per_layer[-1]
+        fc_size = (int(dataset.getImageDimensions()[0] / 2 ** min(convolutional_layers,2))) * int((dataset.getImageDimensions()[1] / 2 ** min(convolutional_layers,2))) * convolutional_filters_per_layer[-1]
         encoded = encoder(input_img, convolutional_layers, convolutional_filter_size, convolutional_filters_per_layer, 0)
         flatten = layers.Flatten()(encoded)
         embedding = layers.Dense(embedding_dimension,name='embedding')(flatten)
         fc = layers.Dense(fc_size)(embedding)
-        reshape = layers.Reshape(((int(dataset.getImageDimensions()[0] / 4)),(int(dataset.getImageDimensions()[1] / 4)),convolutional_filters_per_layer[-1]))(fc)
+        reshape = layers.Reshape(((int(dataset.getImageDimensions()[0] / 2 ** min(convolutional_layers,2))),(int(dataset.getImageDimensions()[1] / 2 ** min(convolutional_layers,2))),convolutional_filters_per_layer[-1]))(fc)
         decoded = decoder(reshape, convolutional_layers, convolutional_filter_size, convolutional_filters_per_layer, 0)
         
         autoencoder = Model(input_img, decoded)
