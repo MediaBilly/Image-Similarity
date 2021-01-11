@@ -115,7 +115,7 @@ while repeat:
     output_layer = layers.Dense(training_labels.num_classes(), activation='softmax',name="output")(dropout)
 
     classifier = Model(input_img, output_layer)
-    classifier.compile(loss='categorical_crossentropy', optimizer=optimizers.Adam(),metrics=['accuracy'])
+    classifier.compile(loss='categorical_crossentropy', optimizer=optimizers.Adam())
 
     # Print it's summary
     classifier.summary()
@@ -188,11 +188,6 @@ while repeat:
         predicted_classes = np.argmax(np.round(y_pred), axis=1)
         true_labels = test_labels.get_labels()
         target_names = [str(i) for i in range(test_labels.num_classes())]
-
-        # Evaluate test set
-        test_evaluation = classifier.evaluate(test_images,to_categorical(true_labels,num_classes=test_labels.num_classes()),verbose=0)
-        print('Test loss: ', test_evaluation[0])
-        print('Test accuracy: ', accuracy_score(true_labels, predicted_classes))
         
         # Print corrent and incorrect labels
         correct_labels = 0

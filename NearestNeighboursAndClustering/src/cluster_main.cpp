@@ -88,7 +88,7 @@ double objectiveFunction(std::vector<Image<PixelType>*> &images, std::vector<Clu
 }
 
 template<typename PixelType>
-void cluster(Dataset<PixelType> *dataset, int K, std::ofstream &outputStream) {
+void cluster(Dataset<PixelType> *dataset,Dataset<Pixel8Bit> *datasetOriginalSpace, int K, std::ofstream &outputStream) {
     // Get images from dataset
     std::vector<Image<PixelType>*> images = dataset->getImages();
 
@@ -231,11 +231,38 @@ void cluster(Dataset<PixelType> *dataset, int K, std::ofstream &outputStream) {
     // Print clustering time
     outputStream << "clustering_time: " << clustering_time << std::endl;
 
-    // Calculate Silhouette for all images
-    silhouette<PixelType>(images, clusters, clusterHistory, outputStream);
+    // If we are in the new space move the cluster results in the original space before evaluation
+    if (sizeof(PixelType) == sizeof(Pixel16Bit)) {
+        std::vector<Cluster<Pixel8Bit>*> clustersOriginalSpace;
+        std::unordered_map<int, Cluster<Pixel8Bit>*> clusterHistoryOriginalSpace;
+        std::vector<Image<Pixel8Bit>*> imagesOriginalSpace = datasetOriginalSpace->getImages();
 
-    // Calculate Value of Objective Function: 
-    outputStream << "Value of Objective Function: " << objectiveFunction(images, clusters) << std::endl;
+        for (unsigned int i = 0;i < clusters.size();i++) {
+            clustersOriginalSpace.push_back(new Cluster<Pixel8Bit>(i,datasetOriginalSpace->getImageWidth(),datasetOriginalSpace->getImageHeight()));
+            std::vector<Image<PixelType>*> tmpPoints = clusters[i]->getPoints();
+            
+            for (unsigned int j = 0;j < tmpPoints.size();j++) {
+                clustersOriginalSpace[i]->addPoint(imagesOriginalSpace[tmpPoints[j]->getId()]);
+                clusterHistoryOriginalSpace[tmpPoints[j]->getId()] = clustersOriginalSpace[i];
+            }
+            
+            clustersOriginalSpace[i]->updateCentroid();
+        }
+
+        // Calculate Silhouette for all images
+        silhouette<Pixel8Bit>(imagesOriginalSpace, clustersOriginalSpace, clusterHistoryOriginalSpace, outputStream);
+        // Calculate Value of Objective Function: 
+        outputStream << "Value of Objective Function: " << objectiveFunction(imagesOriginalSpace, clustersOriginalSpace) << std::endl;
+
+        for (unsigned int i = 0;i < clustersOriginalSpace.size();i++) {
+            delete clustersOriginalSpace[i];
+        }
+    } else {
+        // Calculate Silhouette for all images
+        silhouette<PixelType>(images, clusters, clusterHistory, outputStream);
+        // Calculate Value of Objective Function: 
+        outputStream << "Value of Objective Function: " << objectiveFunction(images, clusters) << std::endl;
+    }
 
     for (unsigned int i = 0;i < clusters.size();i++) {
         delete clusters[i];
@@ -307,13 +334,13 @@ int main(int argc, char const *argv[]) {
         if (datasetOriginalSpace->isValid() && datasetNewSpace->isValid()) {
             // Cluster new space images
             outputStream << "NEW SPACE" << std::endl;
-            cluster<Pixel16Bit>(datasetNewSpace, K, outputStream);
+            cluster<Pixel16Bit>(datasetNewSpace,datasetOriginalSpace, K, outputStream);
 
             outputStream << std::endl;
 
             // Cluster original space images
             outputStream << "ORIGINAL SPACE" << std::endl;
-            cluster<Pixel8Bit>(datasetOriginalSpace, K, outputStream);
+            cluster<Pixel8Bit>(datasetOriginalSpace,datasetOriginalSpace, K, outputStream);
 
             outputStream << std::endl;
 
@@ -334,9 +361,6 @@ int main(int argc, char const *argv[]) {
 
                 // Skip unecessary characters
                 iss >> skip >> skip >> skip >> s;
-
-                // Read cluster size
-                //int clusterSize = get_num_from_string(s);
 
                 // Initialize cluster
                 clusters.push_back(new Cluster<Pixel8Bit>(cluster_index,datasetOriginalSpace->getImageWidth(),datasetOriginalSpace->getImageHeight()));
