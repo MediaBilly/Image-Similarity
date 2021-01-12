@@ -124,8 +124,8 @@ int main(int argc, char const *argv[]) {
     
     double emd_average_correct_search_results = 0.0;
     double manhattan_correct_search_results = 0.0;
-    for (std::vector<Image<Pixel8Bit>*>::iterator qit = queryImages.begin();qit != queryImages.begin()+1; qit++) {
-        //std::cout << "Query: " << (*qit)->getId() << std::endl;
+    for (std::vector<Image<Pixel8Bit>*>::iterator qit = queryImages.begin();qit != queryImages.end(); qit++) {
+        std::cout << "Query: " << (*qit)->getId() << std::endl;
 
         // Generate query image clusters
         std::vector<Image<Pixel8Bit>*> queryClusters = (*qit)->findClusters(cluster_dimension);
@@ -204,8 +204,8 @@ int main(int argc, char const *argv[]) {
         }
     }
 
-    outputStream << "Average Correct Search Results EMD: " << emd_average_correct_search_results / 1 << std::endl;
-    outputStream << "Average Correct Search Results MANHATTAN: " << manhattan_correct_search_results / 1 << std::endl;
+    outputStream << "Average Correct Search Results EMD: " << emd_average_correct_search_results / queryImages.size() << std::endl;
+    outputStream << "Average Correct Search Results MANHATTAN: " << manhattan_correct_search_results / queryImages.size() << std::endl;
     outputStream.close();
 
     for (unsigned int i = 0; i < imageClusters.size(); i++)
