@@ -129,17 +129,7 @@ std::vector<Image<PixelType>*> Image<PixelType>::findClusters(int clusterDimensi
 template<typename PixelType>
 std::tuple<int,int> Image<PixelType>::findCentroid() {
     if (this->centroid == -1) {
-        int maxValue = 0;
-        int weighted_sum = 0;
-        
-        for(int i = 0; i < this->getSize(); i++) {
-            weighted_sum += this->pixels[i];
-
-            if(this->pixels[i] > maxValue)
-                maxValue = this->pixels[i];
-        }
-        
-        this->centroid = maxValue ? weighted_sum / this->getSize() : this->getSize() / 2;
+        this->centroid = this->getSize() / 2;
     }
 
     int x = this->centroid % this->width;

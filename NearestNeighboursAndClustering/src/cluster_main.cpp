@@ -215,21 +215,9 @@ void cluster(Dataset<PixelType> *dataset,Dataset<Pixel8Bit> *datasetOriginalSpac
             }
         }
 
-    } while (assignments > 10);
+    } while (assignments > 100);
 
     double clustering_time = double(clock() - begin_clustering_time) / CLOCKS_PER_SEC;
-
-    // Print stats
-    for (unsigned int i = 0; i < clusters.size(); i++) {
-        outputStream << "CLUSTER-" << i+1 << " {size: " << clusters[i]->getSize() << ", centroid: [";
-        for (int j = 0; j < dataset->getImageDimension() - 1; j++) {
-            outputStream << (int)clusters[i]->getCentroid()->getPixel(j) << ", ";
-        }
-        outputStream << (int)clusters[i]->getCentroid()->getPixel(dataset->getImageDimension()-1) << "]}\n";
-    }
-
-    // Print clustering time
-    outputStream << "clustering_time: " << clustering_time << std::endl;
 
     // If we are in the new space move the cluster results in the original space before evaluation
     if (sizeof(PixelType) == sizeof(Pixel16Bit)) {
@@ -249,6 +237,18 @@ void cluster(Dataset<PixelType> *dataset,Dataset<Pixel8Bit> *datasetOriginalSpac
             clustersOriginalSpace[i]->updateCentroid();
         }
 
+        // Print stats
+        for (unsigned int i = 0; i < clustersOriginalSpace.size(); i++) {
+            outputStream << "CLUSTER-" << i+1 << " {size: " << clustersOriginalSpace[i]->getSize() << ", centroid: [";
+            for (int j = 0; j < datasetOriginalSpace->getImageDimension() - 1; j++) {
+                outputStream << (int)clustersOriginalSpace[i]->getCentroid()->getPixel(j) << ", ";
+            }
+            outputStream << (int)clustersOriginalSpace[i]->getCentroid()->getPixel(datasetOriginalSpace->getImageDimension()-1) << "]}\n";
+        }
+
+        // Print clustering time
+        outputStream << "clustering_time: " << clustering_time << std::endl;
+
         // Calculate Silhouette for all images
         silhouette<Pixel8Bit>(imagesOriginalSpace, clustersOriginalSpace, clusterHistoryOriginalSpace, outputStream);
         // Calculate Value of Objective Function: 
@@ -258,6 +258,18 @@ void cluster(Dataset<PixelType> *dataset,Dataset<Pixel8Bit> *datasetOriginalSpac
             delete clustersOriginalSpace[i];
         }
     } else {
+        // Print stats
+        for (unsigned int i = 0; i < clusters.size(); i++) {
+            outputStream << "CLUSTER-" << i+1 << " {size: " << clusters[i]->getSize() << ", centroid: [";
+            for (int j = 0; j < dataset->getImageDimension() - 1; j++) {
+                outputStream << (int)clusters[i]->getCentroid()->getPixel(j) << ", ";
+            }
+            outputStream << (int)clusters[i]->getCentroid()->getPixel(dataset->getImageDimension()-1) << "]}\n";
+        }
+
+        // Print clustering time
+        outputStream << "clustering_time: " << clustering_time << std::endl;
+
         // Calculate Silhouette for all images
         silhouette<PixelType>(images, clusters, clusterHistory, outputStream);
         // Calculate Value of Objective Function: 

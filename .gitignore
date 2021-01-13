@@ -2,10 +2,11 @@
 datasets
 */__pycache__
 __pycache__
-or_tools
 *.dat
 *.h5
 *.o
+*.zip
 experiments
 testing
 report
+final
